@@ -7,17 +7,21 @@ import { GlobalStyle } from './style'
 import { FontStyle } from './assets/webfont/webfont'
 import { IconStyle } from './assets/iconfont/iconfont'
 
+import { Data } from './application/Singers/data';
+
 import store from './store/index'
 import { Provider } from 'react-redux';
 
 function App() {
   return (
-    <Provider store = {store}>
+    <Provider store={store}>
       <HashRouter>
         <GlobalStyle />
         <FontStyle />
         <IconStyle />
-        {renderRoutes(routes)}
+        <Data>
+          {renderRoutes(routes)}
+        </Data>
       </HashRouter>
     </Provider>
 

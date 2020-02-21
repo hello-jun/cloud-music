@@ -1,9 +1,11 @@
-import React, { forwardRef, useState, useRef, useEffect, useImperativeHandle } from 'react'
+import React, { forwardRef, useState, useRef, useEffect, useImperativeHandle, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import BScroll from 'better-scroll'
 
-import { ScrollContainer } from './style'
-
+import { ScrollContainer, PullDownLoading, PullUpLoading } from './style'
+import Loading from '../loading/index';
+import Loading2 from '../loading-v2/index';
+import { debounce } from "../../api/utils";
 /**
  * Scroll 组件 集成 better-scroll
  */
@@ -15,6 +17,25 @@ const Scroll = forwardRef((props, ref) => {
     const scrollContaninerRef = useRef()
     const { direction, click, refresh, pullUpLoading, pullDownLoading, bounceTop, bounceBottom } = props
     const { pullUp, pullDown, onScroll } = props
+
+
+    let pullUpDebounce = useMemo(() => {
+
+        return debounce(pullUp, 300)
+
+    }, [pullUp]);
+
+
+
+    let pullDownDebounce = useMemo(() => {
+
+        return debounce(pullDown, 300)
+
+    }, [pullDown]);
+
+
+    const PullUpdisplayStyle = pullUpLoading ? { display: "" } : { display: "none" };
+    const PullDowndisplayStyle = pullDownLoading ? { display: "" } : { display: "none" };
 
     useEffect(() => {// 初始化 better-scroll 实例
         const scroll = new BScroll(
@@ -56,26 +77,26 @@ const Scroll = forwardRef((props, ref) => {
         bScroll.on('scrollEnd', () => {
             // 判断是否滑动到了底部
             if (bScroll.y <= bScroll.maxScrollY + 100) {
-                pullUp();
+                pullUpDebounce();
             }
         });
         return () => {
             bScroll.off('scrollEnd');
         }
-    }, [pullUp, bScroll]);
+    }, [pullUpDebounce,pullUp, bScroll]);
 
     useEffect(() => {//进行下拉的判断，调用下拉刷新的函数
         if (!bScroll || !pullDown) return;
         bScroll.on('touchEnd', (pos) => {
             // 判断用户的下拉动作
             if (pos.y > 50) {
-                pullDown();
+                pullDownDebounce();
             }
         });
         return () => {
             bScroll.off('touchEnd');
         }
-    }, [pullDown, bScroll]);
+    }, [pullDownDebounce,pullDown, bScroll]);
 
     useImperativeHandle(ref, () => ({
         refresh() {
@@ -91,9 +112,15 @@ const Scroll = forwardRef((props, ref) => {
         }
     }));
 
+
+
     return (// refs 转发
         <ScrollContainer ref={scrollContaninerRef}>
             {props.children}
+            {/* 滑到底部加载动画 */}
+            <PullUpLoading style={PullUpdisplayStyle}><Loading></Loading></PullUpLoading>
+            {/* 顶部下拉刷新动画 */}
+            <PullDownLoading style={PullDowndisplayStyle}><Loading2></Loading2></PullDownLoading>
         </ScrollContainer>
     )
 })
